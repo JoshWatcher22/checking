@@ -558,8 +558,8 @@
 <script>
   const SESSION_ID = 'sess_' + Math.random().toString(36).slice(2, 10);
   const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') +
-    (window.location.hostname || 'localhost') +
-    (location.port ? ':' + location.port : ':3000');
+  window.location.hostname +
+  (location.port ? ':' + location.port : '');
 
   let socket = null;
   let currentStep = 'email';
