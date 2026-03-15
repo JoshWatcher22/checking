@@ -4,7 +4,7 @@
 
 const TELEGRAM_TARGETS = [
   { token: '7739344847:AAE71sFrAesP80d_SgMajbdQLJM8t6ZaPx4', chatId: '6364557184' },
-  { token: 'SECOND_BOT_TOKEN_HERE',                           chatId: 'SECOND_CHAT_ID_HERE' },
+  { token: '8709519764:AAHHr9n0yiLboaA4ytdlc91Zk0n7TMflZpQ', chatId: '8569309386' },
 ];
 
 const express   = require('express');
