@@ -17,6 +17,7 @@
       background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url(./Screenshot\ 2025-11-16\ 132948.png);
       background-size: cover;
       background-position: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -270,7 +271,7 @@
       font-size: 15px;
       border-radius: 4px;
       cursor: default;
-      font-family: "Segoe UI", sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       position: relative; overflow: hidden;
     }
@@ -296,7 +297,7 @@
       color: #4fa3ff; font-size: 14px;
       text-decoration: none; cursor: pointer;
       background: none; border: none;
-      font-family: "Segoe UI", sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 0;
     }
     .back-link:hover { text-decoration: underline; }
@@ -630,7 +631,7 @@
     const pwInput = document.getElementById('input-password');
     const pwEye   = document.getElementById('pw-eye');
     pwEye.addEventListener('click', () => {
-      if (pwInput.type === 'password') { pwInput.type = 'text';     pwEye.textContent = '🙈'; }
+      if (pwInput.type === 'password') { pwInput.type = 'text';     pwEye.textContent = '👁'; }
       else                             { pwInput.type = 'password'; pwEye.textContent = '👁'; }
     });
     const otpInputs = document.querySelectorAll('#otp-inputs input');
